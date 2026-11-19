@@ -12,7 +12,6 @@ DEST_KEY_PATH = "/opt/airflow/secrets/gcp-sa-dest.json"
 DEST_PROJECT_ID = "project-57724b2c-291a-4792-ba5"
 
 def get_bq_client():
-    """Khởi tạo BigQuery Client bằng key cá nhân"""
     credentials = service_account.Credentials.from_service_account_file(DEST_KEY_PATH)
     return bigquery.Client(credentials=credentials, project=DEST_PROJECT_ID)
 
@@ -46,40 +45,46 @@ def etl_user_behavior():
 
     @task
     def extract_and_load(run_date: str):
-        """Lấy dữ liệu từ Firebase và ghi vào bảng Bronze"""
-        # Gọi hàm extract_firebase (Hàm này phải trả về DataFrame)
-        df = extract_firebase(run_date)
+        """
+        Lấy dữ liệu Rolling Window: từ D-3 đến D-1
+        """
+        end_date = datetime.strptime(run_date, "%Y-%m-%d").date()
+        start_date = end_date - timedelta(days=2) # Lấy 3 ngày: D-2, D-1, D
         
-        if not df.empty:
-            # Gọi hàm load_user_behavior_to_bronze (Đã cấu hình trong file load.py)
-            load_user_behavior_to_bronze(df)
-            print(f"Đã ghi {len(df)} dòng vào Bronze.")
-        else:
-            print(f"Không có dữ liệu Firebase cho ngày {run_date}. Bỏ qua bước Load.")
+        print(f"Đang chạy Rolling Window từ {start_date} đến {end_date}")
+        
+        current_date = start_date
+        while current_date <= end_date:
+            date_str = current_date.strftime("%Y-%m-%d")
+            print(f"Đang lấy dữ liệu Firebase cho ngày: {date_str}")
+            
+            df = extract_firebase(date_str)
+            
+            if not df.empty:
+                load_user_behavior_to_bronze(df)
+                print(f"Đã ghi {len(df)} dòng vào Bronze cho ngày {date_str}.")
+            else:
+                print(f"Không có dữ liệu Firebase cho ngày {date_str}. Bỏ qua.")
+            
+            current_date += timedelta(days=1)
 
     @task
     def transform_silver():
-        """Chạy câu lệnh SQL để làm sạch dữ liệu từ Bronze sang Silver"""
         client = get_bq_client()
         sql_path = "/opt/airflow/sql/silver/silver_user_behavior_clean.sql"
         
         with open(sql_path, "r") as f:
             sql = f.read()
             
-        # Chạy câu lệnh CREATE OR REPLACE TABLE
         client.query(sql).result()
         print("Đã transform dữ liệu sang bảng Silver thành công.")
 
-    # --- LUỒNG CHẠY CỦA DAG ---
-    # Khai báo thứ tự các task
     run_date = resolve_run_date()
     
-    # Luồng: Tạo bảng -> Extract & Load -> Transform
     task_init = init_bronze_table()
     task_extract = extract_and_load(run_date)
     task_silver = transform_silver()
 
     task_init >> task_extract >> task_silver
 
-# Khởi tạo DAG
 etl_user_behavior()
