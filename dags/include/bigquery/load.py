@@ -6,7 +6,7 @@ import pandas as pd
 # Đường dẫn tới key CÁ NHÂN:
 DEST_KEY_PATH = "secrets/gcp-sa-dest.json"
 # Project ID cá nhân:
-DEST_PROJECT_ID = "project-9d554ae6-759f-4a54-807" 
+DEST_PROJECT_ID = "project-57724b2c-291a-4792-ba5" 
 
 def load_to_bronze(df: pd.DataFrame, table_id: str = None):
     """
@@ -33,4 +33,25 @@ def load_to_bronze(df: pd.DataFrame, table_id: str = None):
     job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
     job.result()  
     
+    print(f"Ghi thành công {job.output_rows} dòng vào {table_id}.")
+    
+def load_user_behavior_to_bronze(df: pd.DataFrame):
+    """
+    Ghi dữ liệu hành vi người dùng lên BigQuery Bronze trên project mới.
+    """
+    table_id = f"{DEST_PROJECT_ID}.bronze.fact_user_behavior_raw"
+    
+    credentials = service_account.Credentials.from_service_account_file(DEST_KEY_PATH)
+    client = bigquery.Client(credentials=credentials, project=DEST_PROJECT_ID)
+    
+    job_config = bigquery.LoadJobConfig(
+        write_disposition="WRITE_APPEND", # Nối thêm dữ liệu
+        autodetect=True,                  
+    )
+    
+    print(f"Đang ghi {len(df)} dòng hành vi lên BigQuery ({table_id})...")
+    df["extracted_at"] = pd.to_datetime(df["extracted_at"])
+    
+    job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
+    job.result()
     print(f"Ghi thành công {job.output_rows} dòng vào {table_id}.")

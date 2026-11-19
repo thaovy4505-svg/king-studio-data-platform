@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS `project-57724b2c-291a-4792-ba5.bronze.fact_marketing_raw` (
+  report_date DATE, 
+  platform STRING, 
+  account_id STRING, 
+  account_name STRING,
+  campaign_id STRING, 
+  campaign_name STRING, 
+  adset_id STRING, 
+  adset_name STRING,
+  ad_id STRING, 
+  ad_name STRING, 
+  country_code STRING, 
+  spend_usd NUMERIC,
+  impressions INT64, 
+  clicks INT64, 
+  installs INT64, 
+  purchases INT64,
+  purchase_value_usd NUMERIC, 
+  extracted_at TIMESTAMP
+);
