@@ -35,23 +35,71 @@ def load_to_bronze(df: pd.DataFrame, table_id: str = None):
     
     print(f"Ghi thành công {job.output_rows} dòng vào {table_id}.")
     
+
 def load_user_behavior_to_bronze(df: pd.DataFrame):
     """
-    Ghi dữ liệu hành vi người dùng lên BigQuery Bronze trên project mới.
+    Ghi dữ liệu hành vi người dùng vào Bronze
+    với schema được khai báo tường minh.
     """
+
     table_id = f"{DEST_PROJECT_ID}.bronze.fact_user_behavior_raw"
-    
-    credentials = service_account.Credentials.from_service_account_file(DEST_KEY_PATH)
-    client = bigquery.Client(credentials=credentials, project=DEST_PROJECT_ID)
-    
-    job_config = bigquery.LoadJobConfig(
-        write_disposition="WRITE_APPEND", # Nối thêm dữ liệu
-        autodetect=True,                  
+
+    credentials = service_account.Credentials.from_service_account_file(
+        DEST_KEY_PATH
     )
-    
-    print(f"Đang ghi {len(df)} dòng hành vi lên BigQuery ({table_id})...")
-    df["extracted_at"] = pd.to_datetime(df["extracted_at"])
-    
-    job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
+
+    client = bigquery.Client(
+        credentials=credentials,
+        project=DEST_PROJECT_ID
+    )
+
+    df = df.copy()
+
+    df["event_date"] = pd.to_datetime(
+        df["event_date"]
+    ).dt.date
+
+    df["screen_name"] = df["screen_name"].astype("string")
+    df["country"] = df["country"].astype("string")
+    df["purchase_value"] = pd.to_numeric(
+        df["purchase_value"],
+        errors="coerce"
+    )
+
+    df["extracted_at"] = pd.to_datetime(
+        df["extracted_at"], utc=True
+    )
+
+    schema = [
+        bigquery.SchemaField("event_date", "DATE"),
+        bigquery.SchemaField("event_timestamp", "INT64"),
+        bigquery.SchemaField("event_name", "STRING"),
+        bigquery.SchemaField("user_pseudo_id", "STRING"),
+        bigquery.SchemaField("platform", "STRING"),
+        bigquery.SchemaField("screen_name", "STRING"),
+        bigquery.SchemaField("level", "INT64"),
+        bigquery.SchemaField("country", "STRING"),
+        bigquery.SchemaField("purchase_value", "FLOAT64"),
+        bigquery.SchemaField("extracted_at", "TIMESTAMP"),
+    ]
+
+    job_config = bigquery.LoadJobConfig(
+        write_disposition="WRITE_APPEND",
+        schema=schema
+    )
+
+    print(
+        f"Đang ghi {len(df)} dòng hành vi lên BigQuery ({table_id})..."
+    )
+
+    job = client.load_table_from_dataframe(
+        df,
+        table_id,
+        job_config=job_config
+    )
+
     job.result()
-    print(f"Ghi thành công {job.output_rows} dòng vào {table_id}.")
+
+    print(
+        f"Ghi thành công {job.output_rows} dòng vào {table_id}."
+    )
