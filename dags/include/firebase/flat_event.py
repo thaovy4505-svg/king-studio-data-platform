@@ -34,7 +34,7 @@ def extract_firebase(run_date: str) -> pd.DataFrame:
 
     query = f"""
     SELECT
-        PARSE_DATE('%Y%m%d', event_date) AS event_date,
+        event_date,
         event_timestamp,
         event_name,
         user_pseudo_id,
@@ -83,12 +83,12 @@ def extract_firebase(run_date: str) -> pd.DataFrame:
     try:
         df = client.query(query).to_dataframe()
 
-        df["event_date"] = pd.to_datetime(
-            df["event_date"]
-        ).dt.date
+        # Giữ event_date dạng STRING (YYYYMMDD) trong Bronze
+        df["event_date"] = df["event_date"].astype(str)
 
         df["screen_name"] = df["screen_name"].astype("string")
         df["country"] = df["country"].astype("string")
+
         df["purchase_value"] = pd.to_numeric(
             df["purchase_value"],
             errors="coerce"
