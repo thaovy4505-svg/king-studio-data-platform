@@ -71,7 +71,7 @@ def load_user_behavior_to_bronze(df: pd.DataFrame):
     )
 
     schema = [
-        bigquery.SchemaField("event_date", "DATE"),
+        bigquery.SchemaField("event_date", "STRING"),
         bigquery.SchemaField("event_timestamp", "INT64"),
         bigquery.SchemaField("event_name", "STRING"),
         bigquery.SchemaField("user_pseudo_id", "STRING"),
