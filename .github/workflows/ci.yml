@@ -1,0 +1,52 @@
+name: BigProject2 CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate project
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Check Python syntax
+        run: |
+          python -m compileall -q dags
+
+      - name: Check SQL files
+        run: |
+          find sql -type f -name "*.sql" -print -exec sh -c '
+            test -s "$1" || {
+              echo "ERROR: Empty SQL file: $1"
+              exit 1
+            }
+          ' _ {} \;
+
+      - name: Check Docker Compose YAML
+        run: |
+          pip install pyyaml
+          python -c "
+          import yaml
+          with open('docker-compose.yaml') as f:
+              yaml.safe_load(f)
+          print('docker-compose.yaml: valid YAML')
+          "
+
+      - name: Check Git whitespace errors
+        run: |
+          git diff --check

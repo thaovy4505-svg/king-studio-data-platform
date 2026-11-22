@@ -1,6 +1,7 @@
 
 from airflow.sdk import dag, task
 from datetime import datetime, timedelta
+import pendulum
 
 from include.ads_api.meta_ads import lay_meta
 from include.ads_api.tiktok import lay_tiktok
@@ -14,8 +15,11 @@ import pandas as pd
 import os
 
 
+# Cấu hình
 DEST_KEY_PATH = "/opt/airflow/secrets/gcp-sa-dest.json"
 DEST_PROJECT_ID = "project-57724b2c-291a-4792-ba5"
+
+LOCAL_TZ = pendulum.timezone("Asia/Ho_Chi_Minh")
 
 
 def get_bq_client():
@@ -31,8 +35,10 @@ def get_bq_client():
 
 @dag(
     dag_id="etl_marketing",
-    schedule="0 7 * * *",
-    start_date=datetime(2026, 11, 15),
+    schedule="0 6 * * *",
+    start_date=pendulum.datetime(
+        2026, 11, 15, tz="Asia/Ho_Chi_Minh"
+    ),
     catchup=False,
     params={"run_date": ""}
 )
@@ -44,7 +50,7 @@ def etl_marketing():
 
         if user_date == "":
             return (
-                datetime.now() - timedelta(days=1)
+                pendulum.now(LOCAL_TZ) - timedelta(days=1)
             ).strftime("%Y-%m-%d")
 
         return user_date
@@ -82,7 +88,7 @@ def etl_marketing():
             ignore_index=True
         )
 
-        df_all["extracted_at"] = datetime.now()
+        df_all["extracted_at"] = pendulum.now(LOCAL_TZ)
 
         # Load vào Bronze
         load_to_bronze(df_all)
