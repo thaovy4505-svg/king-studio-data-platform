@@ -1,26 +1,59 @@
-CREATE OR REPLACE TABLE `project-57724b2c-291a-4792-ba5.gold.fact_ad_performance` AS
-SELECT 
-    report_date,
-    platform,
-    account_name AS game_name,
-    campaign_id,
-    campaign_name,
-    ad_id,
-    ad_name,
-    country_code,
-    
-    -- Các chỉ số cơ bản
-    SUM(spend_usd) AS total_spend,
-    SUM(impressions) AS total_impressions,
-    SUM(clicks) AS total_clicks,
-    SUM(installs) AS total_installs,
-    SUM(purchases) AS total_purchases,
-    SUM(purchase_value_usd) AS total_revenue,
-    
-    -- Các chỉ số tính toán (Metrics)
-    SAFE_DIVIDE(SUM(clicks), SUM(impressions)) * 100 AS ctr_percent,
-    SAFE_DIVIDE(SUM(spend_usd), SUM(installs)) AS cpi,
-    SAFE_DIVIDE(SUM(purchase_value_usd), SUM(spend_usd)) AS roas
 
-FROM `project-57724b2c-291a-4792-ba5.silver.fact_marketing_clean`
-GROUP BY 1, 2, 3, 4, 5, 6, 7, 8;
+CREATE OR REPLACE TABLE
+`project-57724b2c-291a-4792-ba5.gold.fact_ad_performance`
+AS
+
+SELECT
+    SAFE_CAST(s.report_date AS DATE) AS report_date,
+    s.platform,
+    s.account_id,
+    s.account_name,
+
+    s.campaign_id,
+    s.campaign_name,
+
+    s.adset_id,
+    s.adset_name,
+
+    s.ad_id,
+    s.ad_name,
+
+    s.country_code,
+
+    ROUND(SUM(CAST(s.spend_usd AS NUMERIC)), 2)
+        AS total_spend_usd,
+
+    SUM(s.impressions) AS total_impressions,
+    SUM(s.clicks) AS total_clicks,
+    SUM(s.installs) AS total_installs,
+    SUM(s.purchases) AS total_purchases,
+
+    ROUND(SUM(CAST(s.purchase_value_usd AS NUMERIC)), 2)
+        AS total_purchase_value_usd,
+
+    ROUND(
+        SAFE_DIVIDE(SUM(s.clicks), SUM(s.impressions)) * 100,
+        2
+    ) AS ctr_percent,
+
+    ROUND(
+        SAFE_DIVIDE(
+            SUM(CAST(s.spend_usd AS NUMERIC)),
+            SUM(s.installs)
+        ),
+        2
+    ) AS cpi,
+
+    ROUND(
+        SAFE_DIVIDE(
+            SUM(CAST(s.purchase_value_usd AS NUMERIC)),
+            SUM(CAST(s.spend_usd AS NUMERIC))
+        ),
+        4
+    ) AS roas
+
+FROM
+    `project-57724b2c-291a-4792-ba5.silver.fact_marketing_clean` AS s
+
+GROUP BY
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11;
