@@ -60,12 +60,21 @@ jobs:
               "mkdir -p /root",
               "git config --global --add safe.directory /home/ubuntu/king-studio-data-platform",
               "cd /home/ubuntu/king-studio-data-platform",
+              "echo '=== EC2 repository status ==='",
+              "git status --short",
               "if [ -n \"$(git status --porcelain)\" ]; then echo 'ERROR: EC2 working tree is not clean'; exit 1; fi",
+              "echo '=== Fetching latest code ==='",
               "git fetch origin main",
+              "echo '=== Updating repository ==='",
               "git merge --ff-only origin/main",
+              "echo '=== Checking Docker Compose ==='",
               "docker compose config --quiet",
+              "echo '=== Updating containers ==='",
               "docker compose up -d",
-              "docker compose ps"
+              "echo '=== Container status ==='",
+              "docker compose ps",
+              "echo '=== Deployment completed ==='",
+              "git log -1 --oneline"
             ]
           }
           JSON
