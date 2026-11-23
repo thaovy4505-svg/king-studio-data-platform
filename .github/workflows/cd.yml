@@ -56,6 +56,8 @@ jobs:
           {
             "commands": [
               "set -eu",
+              "export HOME=/root",
+              "mkdir -p /root",
               "git config --global --add safe.directory /home/ubuntu/king-studio-data-platform",
               "cd /home/ubuntu/king-studio-data-platform",
               "if [ -n \"$(git status --porcelain)\" ]; then echo 'ERROR: EC2 working tree is not clean'; exit 1; fi",
