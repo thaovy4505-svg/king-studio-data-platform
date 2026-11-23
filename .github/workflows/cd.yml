@@ -69,6 +69,8 @@ jobs:
               "git merge --ff-only origin/main",
               "echo '=== Checking Docker Compose ==='",
               "docker compose config --quiet",
+              "echo '=== Building custom Airflow image ==='",
+              "docker compose build airflow-apiserver",
               "echo '=== Updating containers ==='",
               "docker compose up -d",
               "echo '=== Container status ==='",

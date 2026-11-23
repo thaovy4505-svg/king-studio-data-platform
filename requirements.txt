@@ -1,0 +1,10 @@
+# Data processing
+pandas==3.0.5
+pyarrow==25.0.1
+
+# API integration
+requests==2.34.2
+
+# Google Cloud
+google-cloud-bigquery==3.45.0
+google-auth==2.58.0
