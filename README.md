@@ -243,6 +243,19 @@ Thư mục dự án trên EC2:
 
 `/home/ubuntu/king-studio-data-platform`
 
+### 7.3. Git Workflow
+
+Dự án áp dụng quy trình phát triển dựa trên Git branch và Pull Request:
+
+1. Tạo feature branch từ nhánh `main` để phát triển tính năng hoặc cập nhật tài liệu.
+2. Commit và push các thay đổi lên feature branch.
+3. Tạo Pull Request để đề xuất merge thay đổi vào `main`.
+4. GitHub Actions tự động chạy CI để kiểm tra mã nguồn trên Pull Request.
+5. Sau khi kiểm tra thành công, Pull Request được merge vào `main`.
+6. Sự kiện cập nhật `main` kích hoạt workflow CD sau khi CI hoàn tất thành công.
+7. GitHub Actions sử dụng AWS OIDC và Systems Manager để triển khai phiên bản mới lên EC2.
+
+
 ## 8. Cấu trúc thư mục dự án
 
 ```
