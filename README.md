@@ -61,6 +61,8 @@ Hệ thống gồm hai DAG chính, tương ứng với hai nhóm dữ liệu: d�
 
 Hệ thống sử dụng Rolling Window ba ngày, từ D-2 đến D, nhằm cập nhật các dữ liệu quảng cáo có thể thay đổi sau ngày phát sinh.
 
+![King Studio Data ETL](docs/images/etl_mkt.png)
+
 ### 3.2. Quy trình ETL User Behavior
 
 **Tên DAG:** `etl_user_behavior`
@@ -88,6 +90,8 @@ Các sự kiện được thu thập:
 
 Đối với dữ liệu doanh thu, hệ thống phân biệt doanh thu từ giao dịch mua hàng trong ứng dụng và doanh thu quảng cáo. Giá trị gốc và đơn vị tiền tệ được giữ riêng, không tự động quy đổi sang một đồng tiền khác.
 
+![King Studio Data ETL](docs/images/etl_user.png)
+
 ### 3.3. Lịch chạy
 
 | Thuộc tính                | Giá trị             |
@@ -113,6 +117,10 @@ Lưu trữ dữ liệu được thu thập từ các hệ thống nguồn trư�
 | `fact_user_behavior_raw` | Dữ liệu sự kiện thô từ Firebase Analytics                   |
 
 Dữ liệu Marketing được ghi vào Bronze theo cơ chế `WRITE_APPEND`. Dữ liệu User Behavior được kiểm tra schema và chuẩn hóa trước khi tải lên BigQuery.
+
+![King Studio Data Bronze Layer](docs/images/mkt_bronze.png)
+![King Studio Data Bronze Layer](docs/images/user_bronze.png)
+
 
 ### 4.2. Silver Layer – Dữ liệu đã làm sạch
 
@@ -284,7 +292,12 @@ Dự án áp dụng quy trình phát triển dựa trên Git branch và Pull Req
 │           └── flat_event.py
 ├── docs/
 │   └── architecture/
-│       └── king-studio-architecture.png
+│   │   └── king-studio-architecture.png
+│   └── images/
+│       └── etl_mkt.png
+│       └── etl_user.png
+│       └── mkt_bronze.png
+│       └── mkt_bronze.png
 ├── monitoring/
 │   └── prometheus/
 │       └── prometheus.yml
