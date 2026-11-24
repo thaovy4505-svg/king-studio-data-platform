@@ -10,25 +10,9 @@ Dự án áp dụng kiến trúc Medallion gồm ba lớp Bronze, Silver và Gol
 
 ## 2. Kiến trúc hệ thống
 
-```
-flowchart TD
-    A[Google Ads] --> D[Airflow: etl_marketing]
-    B[Meta Ads] --> D
-    C[TikTok Ads] --> D
-    E[Firebase Analytics] --> F[Airflow: etl_user_behavior]
-    D --> G[BigQuery Bronze]
-    F --> G
-    G --> H[BigQuery Silver]
-    H --> I[BigQuery Gold]
-    J[PostgreSQL] --- K[Apache Airflow]
-    L[Redis] --- K
-    M[Prometheus] --> N[Grafana]
-    O[Node Exporter] --> M
-    P[cAdvisor] --> M
-    Q[GitHub Actions] --> R[AWS Systems Manager]
-    R --> S[AWS EC2]
-    S --> K
-```
+## Architecture
+
+![King Studio Data Platform Architecture](docs/architecture/king-studio-architecture.png)
 
 ### Công nghệ sử dụng
 
@@ -36,7 +20,7 @@ flowchart TD
 | --------------------------- | ------------------------- |
 | Điều phối quy trình ETL     | Apache Airflow 3.3.2      |
 | Cơ chế thực thi             | CeleryExecutor            |
-| Cơ sở dữ liệu metadata      | PostgreSQL 16             |
+| Airflow Metadata Database   | PostgreSQL 16             |
 | Message broker              | Redis 7.2                 |
 | Kho dữ liệu                 | Google BigQuery           |
 | Xử lý dữ liệu               | Python, Pandas, SQL       |
@@ -270,23 +254,52 @@ Thư mục dự án trên EC2:
 ├── config/
 │   └── airflow.cfg
 ├── dags/
+│   ├── __init__.py
 │   ├── etl_marketing.py
 │   ├── etl_user_behavior.py
 │   └── include/
 │       ├── ads_api/
+│       │   ├── __init__.py
+│       │   ├── google.py
+│       │   ├── meta_ads.py
+│       │   └── tiktok.py
 │       ├── bigquery/
+│       │   ├── __init__.py
+│       │   └── load.py
 │       └── firebase/
+│           ├── __init__.py
+│           └── flat_event.py
+├── docs/
+│   └── architecture/
+│       └── king-studio-architecture.png
 ├── monitoring/
 │   └── prometheus/
 │       └── prometheus.yml
+├── plugins/
 ├── secrets/
+│   ├── gcp-sa-dest.json
+│   └── gcp-sa-source.json
 ├── sql/
 │   ├── bronze/
+│   │   ├── create_bronze_marketing.sql
+│   │   └── create_bronze_user_behavior.sql
 │   ├── silver/
+│   │   ├── silver_marketing_clean.sql
+│   │   └── silver_user_behavior_clean.sql
 │   └── gold/
+│       ├── gold_fact_ad_performance.sql
+│       ├── gold_fact_adset_daily.sql
+│       ├── gold_fact_campaign_daily.sql
+│       ├── gold_fact_level_funnel_daily.sql
+│       ├── gold_fact_user_engagement_daily.sql
+│       └── gold_fact_user_revenue_daily.sql
+├── .env.example
+├── .gitignore
 ├── docker-compose.yaml
 ├── Dockerfile
-└── README.md
+├── README.md
+└── requirements.txt
+
 ```
 
 ## 9. Môi trường triển khai
